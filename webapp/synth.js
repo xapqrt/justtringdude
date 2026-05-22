@@ -161,13 +161,34 @@ function renderSVG(gates) {
         if (!depth_tracker[gate.depth]) { depth_tracker[gate.depth] = 0; }
         gate.y = depth_tracker[gate.depth] * 80 + 50;
         depth_tracker[gate.depth]++;
-        
-        // replaced trash straight lines with bezier curves so it looks less awful
-        svgContent += `
-            <path d="M ${gate.x - 30},${gate.y + 20} C ${gate.x - 15},${gate.y + 20} ${gate.x - 15},${gate.y + 20} ${gate.x},${gate.y + 20}" fill="none" stroke="gray" stroke-width="2" />
-            <path d="M ${gate.x + 50},${gate.y + 20} C ${gate.x + 65},${gate.y + 20} ${gate.x + 65},${gate.y + 20} ${gate.x + 80},${gate.y + 20}" fill="none" stroke="gray" stroke-width="2" />
-        `;
-        
+    });
+
+    // finally doing real edge routing instead of those trash hardcoded lines
+    if (graph_nodes && graph_nodes.edges) {
+        graph_nodes.edges.forEach(edge => {
+            let fromGate = gates.find(g => g.id === edge.from);
+            let toGate = gates.find(g => g.id === edge.to);
+            
+            if (fromGate && toGate) {
+                // route from right side of source to left side of target
+                let startX = fromGate.x + 50;
+                let startY = fromGate.y + 20;
+                let endX = toGate.x - 5;
+                let endY = toGate.y + 20;
+                
+                // bezier cubic anchor calculation for curved wires
+                let ctrlX1 = startX + 40;
+                let ctrlX2 = endX - 40;
+                
+                svgContent += `
+                    <path d="M ${startX},${startY} C ${ctrlX1},${startY} ${ctrlX2},${endY} ${endX},${endY}" fill="none" stroke="#e74c3c" stroke-width="2" />
+                `;
+            }
+        });
+    }
+    
+    // Draw the nodes on top of edges
+    gates.forEach(gate => {
         if (gate.type === "NAND") {
             // Draw standard IEEE NAND D-shape + inversion bubble
             svgContent += `
