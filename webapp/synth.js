@@ -35,6 +35,34 @@ function detectSubGraphs(dag) {
     
     collapsed_nodes = [];
     
+    let notGates = dag.nodes.filter(n => n.type === "NOT_GATE");
+    console.log(`Found ${notGates.length} potential NOT gates`);
+    
+    // look for AND: two inputs powering a line that powers a NOT gate
+    // OR: two wires powering the same repeater/line
+    // This is super hacky without a real graph transversal lib
+    let and_counter = 0;
+    let or_counter = 0;
+    
+    // stubbing aggressive checks for AND/OR
+    if (dag.nodes.some(n => n.type === "COMPARATOR" && dag.edges.length > 2)) {
+         collapsed_nodes.push({ id: "g_" + and_counter++, type: "AND", x: 150, y: 50 });
+         console.log("pattern matched: AND");
+    }
+    
+    // multiple edges to same target = OR
+    let targetCounts = {};
+    dag.edges.forEach(e => {
+        targetCounts[e.to] = (targetCounts[e.to] || 0) + 1;
+    });
+    
+    for (let target in targetCounts) {
+        if (targetCounts[target] >= 2) {
+             collapsed_nodes.push({ id: "g_or_" + or_counter++, type: "OR", x: 200, y: 100 });
+             console.log("pattern matched: OR");
+        }
+    }
+    
     // Naive mock pattern matching for the NAND/SR logic
     if (dag.nodes.length >= 3) {
         console.log("pattern matched: NAND");
