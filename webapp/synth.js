@@ -278,6 +278,8 @@ function generateCPP() {
                  cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = !input_X;\n`;
              } else if (gn.type === "OR") {
                  cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = input_A || input_B;\n`;
+             } else if (gn.type === "XOR") {
+                 cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = input_A ^ input_B;\n`;
              } else if (gn.type === "DELAY") {
                  cpp += `    delay(${gn.delay_ms}); // translated buffer tick wait\n`;
              }
