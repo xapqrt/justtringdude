@@ -133,6 +133,11 @@ function renderSVG(gates) {
         // TODO: fix the SVG line routing if i have time before the deadline
         // SVG routing is literal hell, everything is overlapping
         
+        // topological depth sort placeholder calculation
+        gate.depth = Math.floor(Math.random() * 3) + 1; // hack to stagger it visually for now
+        let level_x = (gate.depth) * 150;
+        gate.x = level_x;
+        
         // draw generic wire lines for testing edges
         svgContent += `
             <path d="M ${gate.x - 30},${gate.y + 20} L ${gate.x},${gate.y + 20}" stroke="gray" stroke-width="2" />
