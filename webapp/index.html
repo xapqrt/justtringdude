@@ -11,12 +11,41 @@
 </head>
 <body>
     <h1>Redstone Logic Synthesizer</h1>
+    <div>
+        <input type="file" id="jsonUpload" accept=".json" onchange="ingestFile(event)">
+    </div>
+    <br>
+    
     <button onclick="synthesize()">Run Isomorphic Matcher</button>
     <button onclick="generateCPP()">Generate Arduino Code</button>
+    <button onclick="copyCPP()">Copy C++</button>
     
     <div id="svg_container"></div>
     <pre id="cpp_out" style="background: #000; padding: 10px; border: 1px solid #444; margin-top: 20px;"></pre>
 
     <script src="synth.js"></script>
+    <script>
+        function ingestFile(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let parsed = JSON.parse(e.target.result);
+                    sampleJSON = parsed; // overwrite the hardcoded sample
+                    console.log("Ingested real DAG file successfully");
+                } catch(err) {
+                    alert("JSON parse error from the file. ugh");
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function copyCPP() {
+            let code = document.getElementById("cpp_out").innerText;
+            navigator.clipboard.writeText(code);
+            alert("Copied to clipboard!");
+        }
+    </script>
 </body>
 </html>
