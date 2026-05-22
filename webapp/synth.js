@@ -129,6 +129,9 @@ function renderSVG(gates) {
     const container = document.getElementById("svg_container");
     let svgContent = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">`;
     
+    // track heights per depth column so they don't stack on top of each other
+    let depth_tracker = {};
+    
     gates.forEach(gate => {
         // TODO: fix the SVG line routing if i have time before the deadline
         // SVG routing is literal hell, everything is overlapping
@@ -144,6 +147,11 @@ function renderSVG(gates) {
         
         let level_x = (gate.depth) * 150 + 50;
         gate.x = level_x;
+        
+        // Y-axis binning vertically
+        if (!depth_tracker[gate.depth]) { depth_tracker[gate.depth] = 0; }
+        gate.y = depth_tracker[gate.depth] * 80 + 50;
+        depth_tracker[gate.depth]++;
         
         // replaced trash straight lines with bezier curves so it looks less awful
         svgContent += `
