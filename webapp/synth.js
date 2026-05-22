@@ -303,14 +303,28 @@ function generateCPP() {
     if (collapsed_nodes && collapsed_nodes.length > 0) {
         collapsed_nodes.forEach(gn => {
              cpp += `    // processing ${gn.type} gate at ${gn.id}\n`;
+             
+             // resolve upstream AST references natively instead of hardcoded 'input_A'
+             let upstreams = [];
+             if (graph_nodes.edges) {
+                 graph_nodes.edges.filter(e => e.to === gn.id).forEach(e => {
+                     upstreams.push(`var_${e.from.replace(/[^a-zA-Z0-9]/g, "_")}`);
+                 });
+             }
+             let safeId = `var_${gn.id.replace(/[^a-zA-Z0-9]/g, "_")}`;
+             
+             // fill missing upstreams with defaults to prevent C++ compiler crash
+             let argA = upstreams.length > 0 ? upstreams[0] : "false";
+             let argB = upstreams.length > 1 ? upstreams[1] : "false";
+             
              if (gn.type === "AND") {
-                 cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = input_A && input_B; // hardcoded inputs for now ugh\n`;
+                 cpp += `    bool ${safeId} = ${argA} && ${argB};\n`;
              } else if (gn.type === "NOT") {
-                 cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = !input_X;\n`;
+                 cpp += `    bool ${safeId} = !${argA};\n`;
              } else if (gn.type === "OR") {
-                 cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = input_A || input_B;\n`;
+                 cpp += `    bool ${safeId} = ${argA} || ${argB};\n`;
              } else if (gn.type === "XOR") {
-                 cpp += `    bool ${gn.id.replace(/[^a-zA-Z0-9]/g, "_")} = input_A ^ input_B;\n`;
+                 cpp += `    bool ${safeId} = ${argA} ^ ${argB};\n`;
              } else if (gn.type === "DELAY") {
                  cpp += `    delay(${gn.delay_ms}); // translated buffer tick wait\n`;
              }
