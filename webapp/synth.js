@@ -253,6 +253,13 @@ function generateCPP() {
                  cpp += `    delay(${gn.delay_ms}); // translated buffer tick wait\n`;
              }
         });
+        
+        // mapping outputs for the arduino digital pins
+        cpp += `\n    // final output writes\n`;
+        let outputs = collapsed_nodes.filter(n => n.type === "DELAY" || n.type === "AND" || n.type === "OR");
+        outputs.forEach((out_node, idx) => {
+             cpp += `    digitalWrite(${8 + idx}, ${out_node.id.replace(/[^a-zA-Z0-9]/g, "_")});\n`;
+        });
     }
     
     cpp += `}\n`;
