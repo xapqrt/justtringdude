@@ -254,15 +254,25 @@ function generateCPP() {
     
     // map inputs to pins
     let pinCounter = 2; // starting pin
+    let inputArrayMap = {};
     if (graph_nodes && graph_nodes.nodes) {
         let inputs = graph_nodes.nodes.filter(n => n.type === "INPUT");
         inputs.forEach((inp, idx) => {
-             cpp += `    pinMode(${pinCounter + idx}, INPUT_PULLUP);\n`;
+             let pin = pinCounter + idx;
+             cpp += `    pinMode(${pin}, INPUT_PULLUP);\n`;
+             inputArrayMap[inp.id] = pin;
         });
     }
     
     cpp += `}\n\n`;
     cpp += `void loop() {\n`;
+    
+    // read hardware pins
+    cpp += `    // reading physical switches into memory\n`;
+    for (const [id, pin] of Object.entries(inputArrayMap)) {
+        let safeId = id.replace(/[^a-zA-Z0-9]/g, "_");
+        cpp += `    bool in_${safeId} = !digitalRead(${pin}); // active low\n`;
+    }
     
     // logic string build up
     // mostly stubbed for now until the AST transverser is built
