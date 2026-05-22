@@ -11,7 +11,11 @@
   "license": "MIT",
   "icon": "assets/redstone_to_real/icon.png",
   "environment": "*",
-  "entrypoints": {},
+  "entrypoints": {
+    "main": [
+      "com.xapqrt.redstonetoreal.RedstoneToRealMod"
+    ]
+  },
   "depends": {
     "fabricloader": ">=0.14.21",
     "minecraft": "1.20"
