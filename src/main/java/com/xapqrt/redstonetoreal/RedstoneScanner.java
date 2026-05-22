@@ -96,8 +96,16 @@ public class RedstoneScanner {
             String c = comp_cache.get(i);
             String[] parts = c.split(":");
             sb.append("    {\"id\": \"").append(parts[1]).append("\", \"type\": \"").append(parts[0]).append("\"}");
-            if (i < comp_cache.size() - 1) sb.append(",\n");
+            if (i < comp_cache.size() - 1 || raw_inputs.size() > 0) sb.append(",\n");
         }
+        
+        // append raw inputs so the web app can use them
+        for (int i = 0; i < raw_inputs.size(); i++) {
+            sb.append("    {\"id\": \"").append(raw_inputs.get(i).toShortString()).append("\", \"type\": \"INPUT\"}");
+            if (i < raw_inputs.size() - 1) sb.append(",\n");
+        }
+        
+        
         sb.append("\n  ],\n  \"edges\": [\n");
         
         for (int i = 0; i < valid_edges.size(); i++) {
