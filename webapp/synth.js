@@ -134,8 +134,15 @@ function renderSVG(gates) {
         // SVG routing is literal hell, everything is overlapping
         
         // topological depth sort placeholder calculation
-        gate.depth = Math.floor(Math.random() * 3) + 1; // hack to stagger it visually for now
-        let level_x = (gate.depth) * 150;
+        // actually replacing this with a naive depth map, no more random()
+        
+        let in_degree = 0;
+        if (graph_nodes && graph_nodes.edges) {
+            in_degree = graph_nodes.edges.filter(e => e.to === gate.id).length;
+        }
+        gate.depth = in_degree; // somewhat Kahn's algorithm adjacent lol
+        
+        let level_x = (gate.depth) * 150 + 50;
         gate.x = level_x;
         
         // replaced trash straight lines with bezier curves so it looks less awful
