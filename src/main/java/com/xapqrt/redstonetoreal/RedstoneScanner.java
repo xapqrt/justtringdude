@@ -178,12 +178,14 @@ public class RedstoneScanner {
                         boolean is_lit = current_state.get(Properties.LIT);
                         Direction facing = current_state.contains(Properties.HORIZONTAL_FACING) ? current_state.get(Properties.HORIZONTAL_FACING) : Direction.UP;
                         comp_cache.add("NOT_GATE:" + block_thing.toShortString() + ":facing=" + facing.getName() + ":lit=" + is_lit);
+                        System.out.println("Captured NOT gate at " + block_thing);
                     }
                     
                     if (current_state.isOf(Blocks.REPEATER)) {
                         Direction facing = current_state.get(Properties.HORIZONTAL_FACING);
                         int delay = current_state.get(RepeaterBlock.DELAY);
                         comp_cache.add("BUFFER:" + block_thing.toShortString() + ":facing=" + facing.getName() + ":delay=" + delay);
+                        System.out.println("Captured Repeater (delay="+delay+") at " + block_thing);
                     }
                     
                     if (current_state.isOf(Blocks.COMPARATOR)) {
