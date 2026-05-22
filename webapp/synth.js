@@ -63,6 +63,26 @@ function detectSubGraphs(dag) {
         }
     }
     
+    // Check for NOT and NOR
+    let not_counter = 0;
+    
+    // if a single NOT gate isn't part of an AND/NAND cluster, keep it as NOT
+    notGates.forEach(ng => {
+        // assume it is standalone for now
+        let isIsolated = !dag.edges.some(e => e.to === ng.id && targetCounts[ng.id] > 1);
+        if (isIsolated) {
+            collapsed_nodes.push({ id: "g_not_" + not_counter++, type: "NOT", x: 50, y: 250 });
+            console.log("pattern matched: NOT");
+        }
+    });
+
+    // NOR = OR + NOT
+    // stubbing
+    if (or_counter > 0 && not_counter > 0) {
+        collapsed_nodes.push({ id: "g_nor_1", type: "NOR", x: 250, y: 200 });
+        console.log("pattern matched: NOR");
+    }
+    
     // Naive mock pattern matching for the NAND/SR logic
     if (dag.nodes.length >= 3) {
         console.log("pattern matched: NAND");
