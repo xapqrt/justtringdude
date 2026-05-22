@@ -148,6 +148,17 @@ public class RedstoneScanner {
         return buildJSON();
     }
     
+    public void saveGraphToFile() {
+        try {
+            // dumping out to the run directory so the web app can read it
+            java.nio.file.Files.writeString(java.nio.file.Paths.get("redstone_graph.json"), graph_nodes);
+            System.out.println("Graph saved successfully to redstone_graph.json");
+        } catch (Exception e) {
+            System.out.println("Failed to write JSON ugh");
+            e.printStackTrace();
+        }
+    }
+    
     public void scanChunk(World world, BlockPos startPos) {
         
         System.out.println("Beginning chunk scan...");
