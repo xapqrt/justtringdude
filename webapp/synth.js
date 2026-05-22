@@ -292,15 +292,17 @@ function generateCPP() {
     cpp += `    // reading physical switches into memory\n`;
     for (const [id, pin] of Object.entries(inputArrayMap)) {
         let safeId = id.replace(/[^a-zA-Z0-9]/g, "_");
-        cpp += `    bool in_${safeId} = !digitalRead(${pin}); // active low\n`;
+        cpp += `    bool var_${safeId} = !digitalRead(${pin}); // active low\n`;
     }
     
     // logic string build up
     // mostly stubbed for now until the AST transverser is built
     cpp += `    // evaluate inputs and outputs via mapped gates\n`;
-    cpp += `    bool out = false;\n`;
     
+    // sort based on depth so C++ variables are created before assigned downstream
     if (collapsed_nodes && collapsed_nodes.length > 0) {
+        collapsed_nodes.sort((a,b) => (a.depth || 0) - (b.depth || 0));
+        
         collapsed_nodes.forEach(gn => {
              cpp += `    // processing ${gn.type} gate at ${gn.id}\n`;
              
