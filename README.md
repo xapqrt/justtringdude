@@ -10,3 +10,6 @@ It concludes by generating valid `.ino` C++ scripts mapped automatically against
 
 ### Getting Started 
 Refer to `TESTING.md` for in-game execution.
+
+---
+*Created by xapqrt* - The hardest solo-dev grind of the decade.
