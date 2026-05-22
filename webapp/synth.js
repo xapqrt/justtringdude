@@ -138,10 +138,10 @@ function renderSVG(gates) {
         let level_x = (gate.depth) * 150;
         gate.x = level_x;
         
-        // draw generic wire lines for testing edges
+        // replaced trash straight lines with bezier curves so it looks less awful
         svgContent += `
-            <path d="M ${gate.x - 30},${gate.y + 20} L ${gate.x},${gate.y + 20}" stroke="gray" stroke-width="2" />
-            <path d="M ${gate.x + 50},${gate.y + 20} L ${gate.x + 80},${gate.y + 20}" stroke="gray" stroke-width="2" />
+            <path d="M ${gate.x - 30},${gate.y + 20} C ${gate.x - 15},${gate.y + 20} ${gate.x - 15},${gate.y + 20} ${gate.x},${gate.y + 20}" fill="none" stroke="gray" stroke-width="2" />
+            <path d="M ${gate.x + 50},${gate.y + 20} C ${gate.x + 65},${gate.y + 20} ${gate.x + 65},${gate.y + 20} ${gate.x + 80},${gate.y + 20}" fill="none" stroke="gray" stroke-width="2" />
         `;
         
         if (gate.type === "NAND") {
