@@ -58,10 +58,15 @@ public class RedstoneScanner {
                 if (wire_power > adj_power) {
                     System.out.println("power flows from " + wirePos + " -> " + adjacent_thing);
                     // we save this valid flow to trace later
+                    valid_edges.add(wirePos.toShortString() + "->" + adjacent_thing.toShortString());
                 }
             } else if (adj.isOf(Blocks.REPEATER) || adj.isOf(Blocks.REDSTONE_TORCH)) {
                 // it hits a component
                 System.out.println("wire hit a component at " + adjacent_thing);
+                valid_edges.add(wirePos.toShortString() + "->" + adjacent_thing.toShortString());
+            } else if (adj.isSolidBlock(world, adjacent_thing)) {
+                // strong power injection block check
+                System.out.println("found a solid block, checking for strong power injection");
                 valid_edges.add(wirePos.toShortString() + "->" + adjacent_thing.toShortString());
             } else if (adj.isOf(Blocks.REDSTONE_BLOCK) || adj.isOf(Blocks.LEVER)) {
                 // tracing backwards from power source
