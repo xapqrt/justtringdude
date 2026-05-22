@@ -100,7 +100,28 @@ public class RedstoneScanner {
         for (int i = 0; i < comp_cache.size(); i++) {
             String c = comp_cache.get(i);
             String[] parts = c.split(":");
-            sb.append("    {\"id\": \"").append(parts[1]).append("\", \"type\": \"").append(parts[0]).append("\"}");
+            
+            // parsing delay and facing is gross in java
+            StringBuilder extra_props = new StringBuilder();
+            for (int p = 2; p < parts.length; p++) {
+                String[] kv = parts[p].split("=");
+                if (kv.length == 2) {
+                    extra_props.append(", \"").append(kv[0]).append("\": \"").append(kv[1]).append("\"");
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+            sb.append("    {\"id\": \"").append(parts[1]).append("\", \"type\": \"").append(parts[0]).append("\"").append(extra_props.toString()).append("}");
             if (i < comp_cache.size() - 1 || raw_inputs.size() > 0) sb.append(",\n");
         }
         
