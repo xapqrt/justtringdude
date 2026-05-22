@@ -179,3 +179,57 @@ function synthesize() {
     let logicGates = detectSubGraphs(graph_nodes);
     renderSVG(logicGates);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// C++ Transpiler Block
+function generateCPP() {
+    console.log("Transpiling DAG to C++ Arduino code...");
+    
+    let cpp = `// Auto-generated from Redstone-to-Real\n\n`;
+    cpp += `void setup() {\n`;
+    cpp += `    Serial.begin(9600);\n`;
+    
+    // map inputs to pins
+    let pinCounter = 2; // starting pin
+    if (graph_nodes && graph_nodes.nodes) {
+        let inputs = graph_nodes.nodes.filter(n => n.type === "INPUT");
+        inputs.forEach((inp, idx) => {
+             cpp += `    pinMode(${pinCounter + idx}, INPUT_PULLUP);\n`;
+        });
+    }
+    
+    cpp += `}\n\n`;
+    cpp += `void loop() {\n`;
+    
+    // logic string build up
+    // mostly stubbed for now until the AST transverser is built
+    cpp += `    // evaluate inputs and outputs via mapped gates\n`;
+    cpp += `    bool out = false;\n`;
+    
+    if (collapsed_nodes && collapsed_nodes.length > 0) {
+        collapsed_nodes.forEach(gn => {
+             cpp += `    // processing ${gn.type} gate at ${gn.id}\n`;
+        });
+    }
+    
+    cpp += `}\n`;
+    
+    document.getElementById("cpp_out").innerText = cpp;
+}
