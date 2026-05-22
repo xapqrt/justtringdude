@@ -100,6 +100,15 @@ function detectSubGraphs(dag) {
         console.log("pattern matched: NOR");
     }
     
+    // XOR gate isomorphism
+    // usually implemented via comparators in subtract mode or complex torch clusters
+    // i will just look for comparator in mode=subtract
+    let comparators_sub = dag.nodes.filter(n => n.type === "COMPARATOR" && n.mode === "subtract");
+    comparators_sub.forEach((comp, idx) => {
+        collapsed_nodes.push({ id: comp.id, type: "XOR", x: 180, y: 220 + (idx * 50) });
+        console.log(`pattern matched XOR logic from comparator (subtract) at ${comp.id}`);
+    });
+    
     // Naive mock pattern matching for the NAND/SR logic
     if (dag.nodes.length >= 3) {
         console.log("pattern matched: NAND");
