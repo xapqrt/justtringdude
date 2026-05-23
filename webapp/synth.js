@@ -89,6 +89,77 @@ function detectSubGraphs(dag) {
         collapsed_nodes.push({ id: inp.id, type: "INPUT", x: 20, y: 50 + (idx * 50) });
     });
     
+    // Pass: OR + NOT = NOR
+    let new_edges = [...dag.edges];
+    collapsed_nodes = collapsed_nodes.filter(node => {
+        if (node.type === "NOT") {
+            let incoming = new_edges.filter(e => e.to === node.id);
+            if (incoming.length === 1) {
+                let source = collapsed_nodes.find(n => n.id === incoming[0].from);
+                if (source && source.type === "OR") {
+                    source.type = "NOR";
+                    source.id = source.id.replace("g_or_", "g_nor_");
+                    // update edges
+                    new_edges.forEach(e => {
+                        if (e.from === incoming[0].from) e.from = source.id;
+                        if (e.to === incoming[0].from) e.to = source.id;
+                    });
+                    // remove the edge from OR to NOT, and route NOR to NOT's targets
+                    new_edges = new_edges.filter(e => e.to !== node.id);
+                    new_edges.forEach(e => { if (e.from === node.id) e.from = source.id; });
+                    console.log("pattern matched: NOR");
+                    return false; // remove NOT node
+                }
+            }
+        }
+        return true;
+    });
+    dag.edges = new_edges;
+
+    // Pass: NOT + NOT -> OR = NAND -- or -- NOT + NOT -> NOR = AND
+    collapsed_nodes.forEach(node => {
+        if (node.type === "OR" || node.type === "NOR") {
+            let incoming = dag.edges.filter(e => e.to === node.id);
+            if (incoming.length >= 2) { // mostly handling 2-input for simplicity
+                let s1 = collapsed_nodes.find(n => n.id === incoming[0].from);
+                let s2 = collapsed_nodes.find(n => n.id === incoming[1].from);
+                if (s1 && s2 && s1.type === "NOT" && s2.type === "NOT") {
+                    node.type = node.type === "OR" ? "NAND" : "AND";
+                    console.log(`pattern matched: ${node.type}`);
+                    
+                    let in1 = dag.edges.find(e => e.to === s1.id);
+                    let in2 = dag.edges.find(e => e.to === s2.id);
+                    if (in1 && in2) {
+                        incoming[0].from = in1.from; // bypass NOT
+                        incoming[1].from = in2.from; // bypass NOT
+                    }
+                }
+            }
+        }
+    });
+
+    // SR LATCH pass: Two cross-linked NORs or NOTs or NANDs
+    let to_remove = new Set();
+    collapsed_nodes.forEach(n1 => {
+        collapsed_nodes.forEach(n2 => {
+            if (n1.id !== n2.id && !to_remove.has(n1.id) && !to_remove.has(n2.id)) {
+                let e1 = dag.edges.find(e => e.from === n1.id && e.to === n2.id);
+                let e2 = dag.edges.find(e => e.from === n2.id && e.to === n1.id);
+                if (e1 && e2) {
+                    n1.type = "SR_LATCH";
+                    console.log("pattern matched: SR_LATCH");
+                    to_remove.add(n2.id);
+                    // Redirect n2's outputs to n1
+                    dag.edges.forEach(e => {
+                        if (e.from === n2.id) e.from = n1.id;
+                        if (e.to === n2.id) e.to = n1.id;
+                    });
+                }
+            }
+        });
+    });
+    collapsed_nodes = collapsed_nodes.filter(n => !to_remove.has(n.id));
+
     return collapsed_nodes;
 }
 
@@ -295,8 +366,17 @@ function generateCPP() {
                  cpp += `    bool ${safeId} = !${argA};\n`;
              } else if (gn.type === "OR") {
                  cpp += `    bool ${safeId} = ${argA} || ${argB};\n`;
+             } else if (gn.type === "NOR") {
+                 cpp += `    bool ${safeId} = !(${argA} || ${argB});\n`;
+             } else if (gn.type === "NAND") {
+                 cpp += `    bool ${safeId} = !(${argA} && ${argB});\n`;
              } else if (gn.type === "XOR") {
                  cpp += `    bool ${safeId} = ${argA} ^ ${argB};\n`;
+             } else if (gn.type === "SR_LATCH") {
+                 cpp += `    static bool state_${safeId} = false;\n`;
+                 cpp += `    if (${argA}) state_${safeId} = true;\n`;
+                 cpp += `    if (${argB}) state_${safeId} = false;\n`;
+                 cpp += `    bool ${safeId} = state_${safeId};\n`;
              } else if (gn.type === "DELAY") {
                  cpp += `    delay(${gn.delay_ms}); // translated buffer tick wait\n`;
              }
@@ -304,7 +384,7 @@ function generateCPP() {
         
         // mapping outputs for the arduino digital pins
         cpp += `\n    // final output writes\n`;
-        let outputs = collapsed_nodes.filter(n => n.type === "DELAY" || n.type === "AND" || n.type === "OR");
+        let outputs = collapsed_nodes.filter(n => n.type === "DELAY" || n.type === "AND" || n.type === "OR" || n.type === "NOR" || n.type === "NAND" || n.type === "XOR" || n.type === "SR_LATCH");
         outputs.forEach((out_node, idx) => {
              cpp += `    digitalWrite(${8 + idx}, ${out_node.id.replace(/[^a-zA-Z0-9]/g, "_")});\n`;
         });
