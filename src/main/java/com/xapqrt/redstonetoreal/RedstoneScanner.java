@@ -52,18 +52,22 @@ public class RedstoneScanner {
             // if power is flowing via weak power, it's not actually connected as an edge
             // placeholder for deep connection verification
             if (adj.isOf(Blocks.REDSTONE_WIRE)) {
-                int adj_power = adj.contains(Properties.POWER) ? adj.get(Properties.POWER) : 0;
-                
-                // redstone goes down by 1 each block, so strict check
-                if (wire_power > adj_power) {
-                    System.out.println("power flows from " + wirePos + " -> " + adjacent_thing);
-                    // we save this valid flow to trace later
-                    valid_edges.add(wirePos.toShortString() + "->" + adjacent_thing.toShortString());
-                }
-            } else if (adj.isOf(Blocks.REPEATER) || adj.isOf(Blocks.REDSTONE_TORCH)) {
-                // it hits a component
-                System.out.println("wire hit a component at " + adjacent_thing);
                 valid_edges.add(wirePos.toShortString() + "->" + adjacent_thing.toShortString());
+            } else if (adj.isOf(Blocks.REDSTONE_TORCH)) {
+                // Torch outputs to adjacent wires
+                System.out.println("wire connected to torch at " + adjacent_thing);
+                valid_edges.add(adjacent_thing.toShortString() + "->" + wirePos.toShortString());
+            } else if (adj.isOf(Blocks.REPEATER)) {
+                Direction facing = adj.get(Properties.HORIZONTAL_FACING);
+                if (dir == facing) {
+                    // Wire is behind the repeater (input side)
+                    System.out.println("wire feeds into repeater at " + adjacent_thing);
+                    valid_edges.add(wirePos.toShortString() + "->" + adjacent_thing.toShortString());
+                } else if (dir == facing.getOpposite()) {
+                    // Wire is in front of the repeater (output side)
+                    System.out.println("repeater outputs to wire at " + adjacent_thing);
+                    valid_edges.add(adjacent_thing.toShortString() + "->" + wirePos.toShortString());
+                }
             } else if (adj.isSolidBlock(world, adjacent_thing)) {
                 // strong power injection block check
                 System.out.println("found a solid block, checking for strong power injection");
