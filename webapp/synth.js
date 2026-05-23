@@ -27,11 +27,7 @@ const sampleJSON = {
 
 
 function detectSubGraphs(dag) {
-    console.log("Running aggressive Sub-Graph Isomorphism...");
-    
-    // Check for AND, OR, NOT, NAND, NOR, and SR Latches
-    // Naive sub-graph matching pattern:
-    // If two NOT gates output to a third NOT gate => AND Gate (or NAND depending on redstone line inversion)
+    console.log("Running Sub-Graph Isomorphism...");
     
     collapsed_nodes = [];
     
@@ -44,28 +40,10 @@ function detectSubGraphs(dag) {
         collapsed_nodes.push({ id: b.id, type: "DELAY", delay_ms: delay_ms, x: 100, y: 150 + (idx * 50) });
     });
 
-
-
-
-
-
-
-
-
     let notGates = dag.nodes.filter(n => n.type === "NOT_GATE");
     console.log(`Found ${notGates.length} potential NOT gates`);
     
-    // look for AND: two inputs powering a line that powers a NOT gate
-    // OR: two wires powering the same repeater/line
-    // This is super hacky without a real graph transversal lib
-    let and_counter = 0;
     let or_counter = 0;
-    
-    // stubbing aggressive checks for AND/OR
-    if (dag.nodes.some(n => n.type === "COMPARATOR" && dag.edges.length > 2)) {
-         collapsed_nodes.push({ id: "g_" + and_counter++, type: "AND", x: 150, y: 50 });
-         console.log("pattern matched: AND");
-    }
     
     // multiple edges to same target = OR
     let targetCounts = {};
@@ -75,49 +53,41 @@ function detectSubGraphs(dag) {
     
     for (let target in targetCounts) {
         if (targetCounts[target] >= 2) {
-             collapsed_nodes.push({ id: "g_or_" + or_counter++, type: "OR", x: 200, y: 100 });
+             let or_id = "g_or_" + or_counter++;
+             collapsed_nodes.push({ id: or_id, type: "OR", x: 200, y: 100 });
              console.log("pattern matched: OR");
+             
+             // Reroute edges going to 'target' to go to 'or_id' instead
+             dag.edges.forEach(e => {
+                 if (e.to === target) {
+                     e.to = or_id;
+                 }
+             });
+             // Add an edge from 'or_id' to 'target'
+             dag.edges.push({ from: or_id, to: target });
         }
     }
-    
-    // Check for NOT and NOR
-    let not_counter = 0;
     
     // if a single NOT gate isn't part of an AND/NAND cluster, keep it as NOT
     notGates.forEach(ng => {
         // assume it is standalone for now
-        let isIsolated = !dag.edges.some(e => e.to === ng.id && targetCounts[ng.id] > 1);
-        if (isIsolated) {
-            collapsed_nodes.push({ id: "g_not_" + not_counter++, type: "NOT", x: 50, y: 250 });
-            console.log("pattern matched: NOT");
-        }
+        // Keep the original id so edges map properly
+        collapsed_nodes.push({ id: ng.id, type: "NOT", x: 50, y: 250 });
+        console.log("pattern matched: NOT");
     });
 
-    // NOR = OR + NOT
-    // stubbing
-    if (or_counter > 0 && not_counter > 0) {
-        collapsed_nodes.push({ id: "g_nor_1", type: "NOR", x: 250, y: 200 });
-        console.log("pattern matched: NOR");
-    }
-    
     // XOR gate isomorphism
-    // usually implemented via comparators in subtract mode or complex torch clusters
-    // i will just look for comparator in mode=subtract
     let comparators_sub = dag.nodes.filter(n => n.type === "COMPARATOR" && n.mode === "subtract");
     comparators_sub.forEach((comp, idx) => {
         collapsed_nodes.push({ id: comp.id, type: "XOR", x: 180, y: 220 + (idx * 50) });
         console.log(`pattern matched XOR logic from comparator (subtract) at ${comp.id}`);
     });
     
-    // Naive mock pattern matching for the NAND/SR logic
-    if (dag.nodes.length >= 3) {
-        console.log("pattern matched: NAND");
-        collapsed_nodes.push({ id: "g1", type: "NAND", x: 100, y: 150 });
-    }
-    
-    // ...other patterns: NOR, SR Latch, OR
-    console.log("pattern matched: SR_LATCH");
-    collapsed_nodes.push({ id: "g2", type: "SR_LATCH", x: 300, y: 150 });
+    // Make sure we carry over inputs
+    let inputs = dag.nodes.filter(n => n.type === "INPUT");
+    inputs.forEach((inp, idx) => {
+        collapsed_nodes.push({ id: inp.id, type: "INPUT", x: 20, y: 50 + (idx * 50) });
+    });
     
     return collapsed_nodes;
 }
